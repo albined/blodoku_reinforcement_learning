@@ -1,7 +1,7 @@
 from gymnasium import spaces, Env
 import numpy as np
 from game.game import Game
-from plot_game import render_text
+from game.plot_game import render_text
 
 class BlockPuzzleEnv(Env):
     def __init__(self, width=12, height=10, num_blocks=3):
@@ -14,23 +14,23 @@ class BlockPuzzleEnv(Env):
         })
         self.action_space = spaces.MultiDiscrete([num_blocks, height, width])
     
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         state = self.game.reset()
         return self._format_state(state)
     
     def step(self, action):
         state, reward, done, _ = self.game.step(action)
-        return self._format_state(state), reward, done, {}
+        return self._format_state(state), reward, done, False, {}
     
     def _format_state(self, state):
+        # Convert underlying state dict to observation format
         grid = state["grid"]
-        blocks = np.array([block for block in state["blocks"]])
-        return {
-            "grid": grid,
-            "blocks": blocks,
-        }
-    
+        blocks = np.stack(state["blocks"], axis=0)
+        return {"grid": grid, "blocks": blocks}
+
     def render(self, mode="human"):
         if mode == "human":
-            render_text(self.game.grid.grid)
-            
+            render_text(self.game.grid.get_game_grid())
+        else:
+            super().render(mode=mode)

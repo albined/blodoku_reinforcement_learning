@@ -48,8 +48,9 @@ def render_text(grid: np.ndarray):
     """Render the grid using ASCII characters."""
     filled = '■'
     empty = '□'
+    bad = 'x'
     lines = []
     for row in grid:
-        line = ' '.join(filled if cell else empty for cell in row)
+        line = ' '.join(filled if cell == 1 else empty if cell == 0 else bad for cell in row)
         lines.append(line)
     print('\n'.join(lines))

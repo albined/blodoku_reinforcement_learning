@@ -60,6 +60,7 @@ class Grid:
         + combo multiplier for line clears
         """
         if not self.is_valid_placement(block, x, y):
+            print("Invalid placement!!!")
             return -1000  # or some penalty for illegal moves if needed
 
         block_array = block.grid()
@@ -68,4 +69,4 @@ class Grid:
         self.place_block(block, x, y)
         lines_cleared = self.clear_lines()
 
-        return 5 + lines_cleared*10
+        return 0.1 + lines_cleared*1

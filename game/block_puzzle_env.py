@@ -16,12 +16,12 @@ class BlockPuzzleEnv(Env):
     
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        state = self.game.reset()
-        return self._format_state(state)
+        state, action_mask = self.game.reset()
+        return self._format_state(state), action_mask
     
     def step(self, action):
-        state, reward, done, _ = self.game.step(action)
-        return self._format_state(state), reward, done, False, {}
+        (state, action_mask), reward, done, _ = self.game.step(action)
+        return (self._format_state(state), action_mask), reward, done, False, {}
     
     def _format_state(self, state):
         # Convert underlying state dict to observation format

@@ -3,6 +3,7 @@ from game.block import EmptyBlock, PaddedTypeBlock, random_block
 import numpy as np
 
 INVALID_MOVE_PENALTY = -100
+GAME_END_PENALTY = -1
 
 class Game:
         
@@ -14,8 +15,8 @@ class Game:
         self.done = False
         
     def regenerate_block_queue(self):
-        self.block_queue = [random_block() for _ in range(3)]
-        # self.block_queue = [PaddedTypeBlock(1, 0, 4) for _ in range(3)]
+        #self.block_queue = [random_block() for _ in range(3)]
+        self.block_queue = [PaddedTypeBlock(8, 0, 4) for _ in range(3)]
         self.block_queue_size = 3
         
     def step(self, action):
@@ -37,13 +38,16 @@ class Game:
             return self.get_state(), INVALID_MOVE_PENALTY, True, {}
 
         reward = self.grid.place_and_score(block, x, y)
-        self.score += 10
         
-        if not self.any_valid_moves():
+        action_mask = self.compute_action_mask()
+        
+        if not action_mask.any():
             self.done = True
-    
-        return self.get_state(), reward, self.done, {}
-    
+            reward = GAME_END_PENALTY
+
+        self.score += reward
+        return (self.get_state(), action_mask), reward, self.done, {}
+
     def any_valid_moves(self):
         for idx, block in enumerate(self.block_queue):
             valid = self.grid.get_all_valid_placements(block)
@@ -56,10 +60,29 @@ class Game:
         self.regenerate_block_queue()
         self.score = 0
         self.done = False
-        return self.get_state()
+        return self.get_state(), self.compute_action_mask()
 
     def get_state(self):
         return {
             "grid": self.grid.get_game_grid().copy(),
             "blocks": [block.grid() for block in self.block_queue],
         }
+        
+    def compute_action_mask(self):
+        grid = self.grid
+        blocks = self.block_queue
+        num_blocks = len(blocks)
+        
+        grid_height, grid_width = grid.get_game_grid().shape
+        mask = np.zeros((num_blocks * grid_height * grid_width,), dtype=bool)
+
+        for block_idx, block in enumerate(blocks):
+            if isinstance(block, EmptyBlock):
+                continue
+
+            valid_locs = np.argwhere(grid.get_all_valid_placements(block))  # shape (N, 2), each row is [y, x]
+            for (y, x) in valid_locs:
+                flat_action = block_idx * (grid_width * grid_height) + y * grid_width + x
+                mask[flat_action] = True
+
+        return mask  # shape: (num_blocks * H * W,)

@@ -2,7 +2,7 @@ from game.grid import Grid
 from game.block import EmptyBlock, PaddedTypeBlock, random_block, random_block_encoded
 import numpy as np
 
-INVALID_MOVE_PENALTY = -1
+INVALID_MOVE_PENALTY = -3
 GAME_END_PENALTY = -1
 
 class Game:

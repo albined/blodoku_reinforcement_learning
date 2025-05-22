@@ -1,3 +1,4 @@
 /sb3_logs
 *.zip
 *.pyc
+*cpython-*.pyc

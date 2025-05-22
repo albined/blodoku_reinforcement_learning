@@ -54,4 +54,4 @@ def encode_state_cnn(state):
     stacked = np.concatenate([grid[None, :, :], shifted_tiles], axis=0)
     stacked = np.astype(stacked, np.uint8)
     # stacked = np.pad(stacked, ((0, 0), (0, 64 - stacked.shape[1]), (0, 64 - stacked.shape[2])), mode='constant')
-    return stacked
+    return stacked.transpose(1, 2, 0)  # shape: (H, W, num_channels)

@@ -1,22 +1,23 @@
 from game.grid import Grid
-from game.block import EmptyBlock, PaddedTypeBlock, random_block
+from game.block import EmptyBlock, PaddedTypeBlock, random_block, random_block_encoded
 import numpy as np
 
-INVALID_MOVE_PENALTY = -100
+INVALID_MOVE_PENALTY = -1
 GAME_END_PENALTY = -1
 
 class Game:
         
-    def __init__(self, width=12, height=10, block_size=4):
+    def __init__(self, width=12, height=10, block_size=4, block_function=random_block_encoded):
         self.grid = Grid(width, height, block_size)
         self.block_size = block_size
+        self.block_function = block_function
         self.regenerate_block_queue()
+        self.encoding_shape = self.block_queue[0].get_encoding().shape
         self.score = 0
         self.done = False
         
     def regenerate_block_queue(self):
-        #self.block_queue = [random_block() for _ in range(3)]
-        self.block_queue = [PaddedTypeBlock(8, 0, 4) for _ in range(3)]
+        self.block_queue = [self.block_function() for _ in range(3)]
         self.block_queue_size = 3
         
     def step(self, action):
@@ -26,7 +27,7 @@ class Game:
         
         block = self.block_queue[block_index]
         if isinstance(block, EmptyBlock):
-            return self.get_state(), INVALID_MOVE_PENALTY, True, {}
+            return (self.get_state(), None), INVALID_MOVE_PENALTY, True, {}
         self.block_queue[block_index] = EmptyBlock(self.block_size)
         self.block_queue_size -= 1
         
@@ -35,7 +36,7 @@ class Game:
             self.regenerate_block_queue()
         
         if not self.grid.is_valid_placement(block, x ,y):
-            return self.get_state(), INVALID_MOVE_PENALTY, True, {}
+            return (self.get_state(), None), INVALID_MOVE_PENALTY, True, {}
 
         reward = self.grid.place_and_score(block, x, y)
         
@@ -65,8 +66,8 @@ class Game:
     def get_state(self):
         return {
             "grid": self.grid.get_game_grid().copy(),
-            "blocks": [block.grid() for block in self.block_queue],
-        }
+            "blocks": [block.get_encoding() if not isinstance(block, EmptyBlock) else np.zeros(self.encoding_shape) for block in self.block_queue],
+            }
         
     def compute_action_mask(self):
         grid = self.grid

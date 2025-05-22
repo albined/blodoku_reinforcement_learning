@@ -7,7 +7,7 @@ class Grid:
         self.block_size = block_size
         self.grid_ = np.zeros((height, width), dtype=int)
         self.grid_ = np.pad(self.grid_, ((0, block_size), (0, block_size)), 'constant', constant_values=1)
-        # Maybe add combo here later if I can get it to work normally first
+        self.combo = 0
     
     def get_padded_grid(self):
         return self.grid_
@@ -51,7 +51,30 @@ class Grid:
             cleared += np.sum(full_cols)
 
         return cleared
-    
+
+    def compute_circumference_area_ratio(self, grid: np.ndarray) -> float:
+        h, w = grid.shape
+        area = np.sum(grid)
+        
+        if area == 0:
+            return float('inf')
+
+        inner_circumference = 0
+
+        # Check each filled cell
+        for i in range(1, h - 1):
+            for j in range(1, w - 1):
+                if grid[i, j] == 1:
+                    # Count adjacent empty cells (up, down, left, right)
+                    neighbors = [
+                        grid[i - 1, j],
+                        grid[i + 1, j],
+                        grid[i, j - 1],
+                        grid[i, j + 1]
+                    ]
+                    inner_circumference += sum(1 for n in neighbors if n == 0)
+
+        return inner_circumference / area
     
     def place_and_score(self, block: Block, x: int, y: int) -> int:
         """
@@ -66,7 +89,19 @@ class Grid:
         block_array = block.grid()
         num_cells = np.sum(block_array)
 
+        before_ratio = self.compute_circumference_area_ratio(self.get_game_grid())
         self.place_block(block, x, y)
+        after_ratio = self.compute_circumference_area_ratio(self.get_game_grid())
+        delta_ratio = before_ratio - after_ratio
+        delta_ratio = np.clip(delta_ratio * 1, -0.3, 0.3)
+        
         lines_cleared = self.clear_lines()
+        if lines_cleared > 0:
+            self.combo += lines_cleared
+        else:
+            self.combo = 0
 
-        return 0.1 + lines_cleared*1
+        combo_multiplier_dict = {0: 0, 1: 1, 2: 3, 3: 5, 4: 8, 5: 12, 6: 16}
+        combo_multiplier = combo_multiplier_dict.get(self.combo, 20)
+        
+        return 0.1 + lines_cleared*combo_multiplier + delta_ratio

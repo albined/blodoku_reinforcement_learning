@@ -15,15 +15,19 @@ def shift_array(arr, dx=0, dy=0):
     Shifts array arr to the right by dx and down by dy.
     Pads with zeros. Cuts off overflow.
     """
-    C, H, W = arr.shape
-    padded = np.pad(arr, ((0, 0), (0, dy), (0, dx)), mode='constant')
-    return padded[:, :H, :W]
+
+    if len(arr.shape) == 2:
+        H, W = arr.shape
+        padded = np.pad(arr, ((dy, 0), (dx, 0)), mode='constant')
+        return padded[:H, :W]
+    elif len(arr.shape) == 3:
+        C, H, W = arr.shape
+        padded = np.pad(arr, ((0, 0), (dy, 0), (dx, 0)), mode='constant')
+        return padded[:, :H, :W]
 
 def generate_shifted_channels(arr, x_shifts=[1, 2, 3], y_shifts=[1, 2, 3]):
-    shifted_x = [shift_array(arr, dx=dx, dy=0) for dx in x_shifts]
-    shifted_y = [shift_array(arr, dx=0, dy=dy) for dy in y_shifts]
-    # Stack all along new axis (channel dimension)
-    return np.stack(shifted_x + shifted_y, axis=0)  # shape: (num_shifts, H, W)
+    shifted = [shift_array(arr, dx=dx, dy=dy) for dx, dy in zip(x_shifts, y_shifts)]
+    return np.stack(shifted, axis=0)  # shape: (num_shifts, H, W)
 
 def encode_state_cnn(state):
     """
@@ -48,4 +52,6 @@ def encode_state_cnn(state):
     shifted_tiles = generate_shifted_channels(base_tile, x_shifts=X, y_shifts=Y)
     shifted_tiles = shifted_tiles.reshape(-1, *shifted_tiles.shape[2:])  # Flatten the first dimension
     stacked = np.concatenate([grid[None, :, :], shifted_tiles], axis=0)
+    stacked = np.astype(stacked, np.uint8)
+    # stacked = np.pad(stacked, ((0, 0), (0, 64 - stacked.shape[1]), (0, 64 - stacked.shape[2])), mode='constant')
     return stacked

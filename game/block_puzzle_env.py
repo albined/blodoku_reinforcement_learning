@@ -2,12 +2,13 @@ from gymnasium import spaces, Env
 import numpy as np
 from game.game import Game
 from game.plot_game import render_text
+from game.block import random_block, random_block_encoded
 
 class BlockPuzzleEnv(Env):
-    def __init__(self, width=12, height=10, num_blocks=3):
+    def __init__(self, width=12, height=10, num_blocks=3, block_function=random_block_encoded):
         super(BlockPuzzleEnv, self).__init__()
-        self.game = Game(width, height)
-        
+        self.game = Game(width, height, block_size=4, block_function=block_function)
+
         self.observation_space = spaces.Dict({
             "grid": spaces.Box(low=0, high=1, shape=(width, height), dtype=np.int32),
             "blocks": spaces.Box(low=0, high=1, shape=(num_blocks, 4, 4), dtype=np.int32),

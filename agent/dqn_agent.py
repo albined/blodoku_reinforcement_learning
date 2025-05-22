@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from agent.model import DQN
+from agent.model import DuelingDQN as DQN
 from agent.replay_buffer import ReplayBuffer
 from agent.utils import encode_state
 
@@ -54,15 +54,23 @@ class DQNAgent:
         q_values = q_values.gather(1, actions.unsqueeze(1)).squeeze()
 
         with torch.no_grad():
+            # next_q_values_target = self.target_network(next_states)
+            # next_q_values_target[~next_action_masks] = -1e6
+            # max_next_q_values = next_q_values_target.max(1)[0]
+            
+            # Above normal below double dqn
+            next_q_values_online = self.q_network(next_states)
+            next_q_values_online[~next_action_masks] = -1e6
+            best_next_actions = next_q_values_online.argmax(1)
+
+            # Use target network to evaluate selected action
             next_q_values_target = self.target_network(next_states)
-            next_q_values_target[~next_action_masks] = -1e6
-            max_next_q_values = next_q_values_target.max(1)[0]
+            max_next_q_values = next_q_values_target.gather(1, best_next_actions.unsqueeze(1)).squeeze(1)
+
+            
             target_q = rewards + self.gamma * max_next_q_values * (1 - dones)
             target_q = torch.clamp(target_q, -10, 10)
 
-            
-        # just_nans = torch.FloatTensor(np.full_like(target_q.cpu(), np.nan)).to(self.device)
-        # loss = nn.MSELoss()(q_values, just_nans)
         loss = nn.MSELoss()(q_values, target_q)
 
         self.optimizer.zero_grad()

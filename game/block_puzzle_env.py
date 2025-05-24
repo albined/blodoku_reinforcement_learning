@@ -21,8 +21,8 @@ class BlockPuzzleEnv(Env):
         return self._format_state(state), action_mask
     
     def step(self, action):
-        (state, action_mask), reward, done, _ = self.game.step(action)
-        return (self._format_state(state), action_mask), reward, done, False, {}
+        (state, action_mask), reward, done, info = self.game.step(action)
+        return (self._format_state(state), action_mask), reward, done, False, info
     
     def _format_state(self, state):
         # Convert underlying state dict to observation format

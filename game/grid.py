@@ -86,14 +86,14 @@ class Grid:
             print("Invalid placement!!!")
             return -1000  # or some penalty for illegal moves if needed
 
-        block_array = block.grid()
-        num_cells = np.sum(block_array)
+        # block_array = block.grid()
+        # num_cells = np.sum(block_array)
 
-        before_ratio = self.compute_circumference_area_ratio(self.get_game_grid())
+        # before_ratio = self.compute_circumference_area_ratio(self.get_game_grid())
         self.place_block(block, x, y)
-        after_ratio = self.compute_circumference_area_ratio(self.get_game_grid())
-        delta_ratio = before_ratio - after_ratio
-        delta_ratio = np.clip(delta_ratio * 1, -0.3, 0.3)
+        # after_ratio = self.compute_circumference_area_ratio(self.get_game_grid())
+        # delta_ratio = before_ratio - after_ratio
+        # delta_ratio = np.clip(delta_ratio * 1, -0.3, 0.3)
         
         lines_cleared = self.clear_lines()
         if lines_cleared > 0:
@@ -101,7 +101,7 @@ class Grid:
         else:
             self.combo = 0
 
-        combo_multiplier_dict = {0: 0, 1: 1, 2: 3, 3: 5, 4: 8, 5: 12, 6: 16}
-        combo_multiplier = combo_multiplier_dict.get(self.combo, 20)
+        combo_multiplier_dict = {0: 0, 1: 1, 2: 3, 3: 5}
+        combo_multiplier = combo_multiplier_dict.get(self.combo, 5)
         
-        return 0.1 + lines_cleared*combo_multiplier + delta_ratio
+        return 0.01 + lines_cleared*combo_multiplier*1, lines_cleared

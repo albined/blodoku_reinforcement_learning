@@ -55,3 +55,10 @@ def encode_state_cnn(state):
     stacked = np.astype(stacked, np.uint8)
     # stacked = np.pad(stacked, ((0, 0), (0, 64 - stacked.shape[1]), (0, 64 - stacked.shape[2])), mode='constant')
     return stacked.transpose(1, 2, 0)  # shape: (H, W, num_channels)
+
+def encode_state_cnn_modern(state):
+    # Should return a grid of shape (H, W) and then one hot blocks of shape (num_blocks, one_hot_size)
+    grid = state["grid"]
+    blocks = np.array(state["blocks"])
+    
+    return grid, blocks

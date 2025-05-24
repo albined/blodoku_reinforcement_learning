@@ -3,5 +3,4 @@
 *.pyc
 *cpython-*.pyc
 sb3_logs/*
-./*.pyc
-*.zip
+__pycache__/

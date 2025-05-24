@@ -104,4 +104,4 @@ class Grid:
         combo_multiplier_dict = {0: 0, 1: 1, 2: 3, 3: 5}
         combo_multiplier = combo_multiplier_dict.get(self.combo, 5)
         
-        return 0.01 + lines_cleared*combo_multiplier*1, lines_cleared
+        return 0.01 + lines_cleared*1, lines_cleared

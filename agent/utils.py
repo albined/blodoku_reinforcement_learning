@@ -62,3 +62,37 @@ def encode_state_cnn_modern(state):
     blocks = np.array(state["blocks"])
     
     return grid, blocks
+
+def encode_state_cnn_channeled(state):
+    grid = state["grid"]
+    blocks = state["blocks"]
+    
+    # Remove all padding around the blocks to create as tight array as possible (0s = padding)
+    
+    gh, gw = grid.shape
+    block_tensors = []
+    for block in blocks:
+        # Find nonzero rows and columns
+        rows = np.any(block, axis=1)
+        cols = np.any(block, axis=0)
+        if not rows.any() or not cols.any():
+            # Empty block, just use zeros
+            tight = np.zeros_like(block)
+        else:
+            rmin, rmax = np.where(rows)[0][[0, -1]]
+            cmin, cmax = np.where(cols)[0][[0, -1]]
+            tight = block[rmin:rmax+1, cmin:cmax+1]
+        # Pad to center in (gh, gw)
+        th, tw = tight.shape
+        pad_h = gh - th
+        pad_w = gw - tw
+        pad_top = pad_h // 2
+        pad_bottom = pad_h - pad_top
+        pad_left = pad_w // 2
+        pad_right = pad_w - pad_left
+        padded = np.pad(tight, ((pad_top, pad_bottom), (pad_left, pad_right)), mode='constant')
+        block_tensors.append(padded)
+    # Stack grid and all blocks as channels
+    channels = [grid] + block_tensors
+    tensor = np.stack(channels, axis=0)  # (C, H, W)
+    return tensor
